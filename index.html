@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SwachhTrust — Real-Time Sanitation Trust Index</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header class="site">
+  <div class="site-inner">
+    <div class="brand">
+      <h1><span class="dot"></span>SwachhTrust</h1>
+      <span class="brand-tag">real-time sanitation trust index</span>
+    </div>
+    <div class="site-meta">
+      <span class="live-clock mono" id="liveClock">—</span>
+      <button class="btn ghost" id="resetDataBtn" title="Clear saved check-ins and go back to the seed demo data">Reset demo data</button>
+      <button class="btn" id="reportNowBtn">+ Report a facility</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <div class="section-head" style="border:none;padding-bottom:0;margin-bottom:26px;">
+      <div>
+        <span class="eyebrow">City-wide status · Jaipur (demo)</span>
+        <h2 style="margin-top:6px;">Sanitation Trust Dashboard</h2>
+        <p>Crowd check-ins, weighed against official maintenance logs, rolled into one live score per facility and for the city.</p>
+      </div>
+    </div>
+
+    <div class="hero-grid">
+      <div class="gauge-card">
+        <svg class="gauge-svg" viewBox="0 0 360 210" id="gaugeSvg" aria-hidden="true"></svg>
+        <div class="gauge-score">
+          <div class="num" id="cityScoreNum">—</div>
+          <div class="lbl">City Trust Score / 100</div>
+        </div>
+        <div class="gauge-legend" id="gaugeLegend"></div>
+      </div>
+
+      <div class="stats-card">
+        <div class="stat-row">
+          <span class="lbl">Facilities monitored</span>
+          <span class="val" id="statTotal">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="lbl">Active discrepancies (crowd ≠ official)</span>
+          <span class="val amber" id="statDiscrepancy">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="lbl">Priority repair flags sent to authority</span>
+          <span class="val red" id="statFlags">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="lbl">Needs repair right now</span>
+          <span class="val red" id="statBad">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section id="explorer">
+      <div class="section-head">
+        <div>
+          <h2>Facility Explorer</h2>
+          <p>Tap a pin or a ticket to open its inspection record.</p>
+        </div>
+        <div class="legend-inline">
+          <span><i style="background:var(--green)"></i>Good</span>
+          <span><i style="background:var(--amber)"></i>Okay</span>
+          <span><i style="background:var(--red)"></i>Needs repair</span>
+          <span><i style="background:var(--red);box-shadow:0 0 0 2px var(--red-bg)"></i>Discrepancy flagged</span>
+        </div>
+      </div>
+
+      <div class="explorer-grid">
+        <div>
+          <div class="map-toolbar">
+            <span class="form-hint">Fixed demo facilities around Jaipur — tap "Locate me" to show your position too.</span>
+            <button class="btn ghost" id="locateBtn">Locate me</button>
+          </div>
+          <div id="map"></div>
+        </div>
+        <div class="list-panel">
+          <div class="filter-bar" id="filterBar"></div>
+          <div id="listBody"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="detail">
+      <div class="section-head">
+        <div>
+          <h2>Inspection Ticket</h2>
+          <p>Granular crowd ratings, checked against what the official record claims.</p>
+        </div>
+      </div>
+      <div class="detail-card" id="detailCard">
+        <div class="detail-empty">Select a facility on the map or list above to see its inspection ticket.</div>
+      </div>
+    </section>
+
+    <section id="report">
+      <div class="section-head">
+        <div>
+          <h2>Submit a Check-In</h2>
+          <p>Rate what you actually found. Every submission feeds the discrepancy engine live.</p>
+        </div>
+      </div>
+      <div class="form-card">
+        <form id="checkinForm">
+          <div class="field">
+            <label class="field-label" for="facilitySelect">Facility</label>
+            <select class="facility-select" id="facilitySelect"></select>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Water</label>
+            <div class="pill-group" id="pg-water"></div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Cleanliness</label>
+            <div class="star-rating" id="starRating"></div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Toilet functionality</label>
+            <div class="pill-group" id="pg-functionality"></div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Soap</label>
+            <div class="pill-group" id="pg-soap"></div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Lighting</label>
+            <div class="pill-group" id="pg-lighting"></div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Accessibility</label>
+            <div class="pill-group" id="pg-accessibility"></div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Waste bins</label>
+            <div class="pill-group" id="pg-wastebins"></div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="commentField">Comment (optional)</label>
+            <textarea class="comment" id="commentField" placeholder="Anything specific worth flagging?"></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn">Submit check-in</button>
+            <span class="form-hint">Runs instantly through the discrepancy engine — no login needed for this prototype.</span>
+          </div>
+          <div class="toast" id="formToast"></div>
+        </form>
+      </div>
+    </section>
+
+    <section id="flags">
+      <div class="section-head">
+        <div>
+          <h2>Automated Flags to Authority</h2>
+          <p>Auto-generated whenever crowd reports contradict an official "operational" record.</p>
+        </div>
+      </div>
+      <div class="flags-intro">
+        <b>Escalation rule:</b> a facility is auto-flagged for priority repair when 3+ independent reports of malfunction land within 10 days while the official record still says "Operational."
+      </div>
+      <div class="flag-list" id="flagList"></div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  SwachhTrust — hackathon prototype. Facility, maintenance-record and check-in data is simulated for demonstration; nothing here is sent to a real authority.
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
